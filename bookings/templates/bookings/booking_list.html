@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}My Bookings{% endblock %}
+{% block content %}
+<h2 class="mb-4">My Bookings</h2>
+<div class="table-responsive">
+<table class="table bg-white">
+    <thead>
+        <tr><th>Course</th><th>Session</th><th>Status</th><th>Amount</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for booking in bookings %}
+        <tr>
+            <td><a href="{{ booking.session.course.get_absolute_url }}">{{ booking.session.course.title }}</a></td>
+            <td>{{ booking.session.start_at|date:"d M Y, H:i" }}</td>
+            <td>
+                {% if booking.status == "confirmed" %}
+                    <span class="badge bg-success">Confirmed</span>
+                {% elif booking.status == "awaiting_verification" %}
+                    <span class="badge bg-warning text-dark">Awaiting verification</span>
+                {% elif booking.status == "pending_payment" %}
+                    <span class="badge bg-secondary">Pending payment</span>
+                {% else %}
+                    <span class="badge bg-secondary">Cancelled</span>
+                {% endif %}
+            </td>
+            <td>RM {{ booking.amount_due }}</td>
+            <td class="text-end">
+                {% if booking.status == "pending_payment" %}
+                    <a href="{% url 'bookings:booking_pay' booking.pk %}" class="btn btn-sm btn-primary">Pay now</a>
+                {% elif booking.status == "awaiting_verification" %}
+                    <a href="{% url 'bookings:booking_pay' booking.pk %}" class="btn btn-sm btn-outline-secondary">View status</a>
+                {% elif booking.status == "confirmed" %}
+                    {% if booking.session.meeting_link %}
+                        <a href="{{ booking.session.meeting_link }}" target="_blank" rel="noopener" class="btn btn-sm btn-success">Join meeting</a>
+                    {% endif %}
+                    <a href="{% url 'bookings:booking_reschedule' booking.pk %}" class="btn btn-sm btn-outline-secondary">Reschedule</a>
+                {% endif %}
+                {% if booking.status != "cancelled" %}
+                    <a href="{% url 'bookings:booking_cancel' booking.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">You haven't booked any sessions yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

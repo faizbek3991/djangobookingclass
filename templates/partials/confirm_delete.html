@@ -1,0 +1,7 @@
+<h2 class="mb-3">{{ delete_title }}</h2>
+<p>Are you sure you want to {{ action_word|default:"delete" }} <strong>{{ object }}</strong>? This cannot be undone.</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, {{ action_word|default:"delete" }}</button>
+    <a href="{{ cancel_url }}" class="btn btn-outline-secondary">Cancel</a>
+</form>

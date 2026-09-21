@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ course.seo_title }}{% endblock %}
+{% block meta_description %}{{ course.seo_description }}{% endblock %}
+{% block og_title %}{{ course.seo_title }}{% endblock %}
+{% block og_description %}{{ course.seo_description }}{% endblock %}
+{% block og_image %}
+{% if course.og_image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ course.og_image.url }}">
+{% elif site_seo.default_og_image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_seo.default_og_image.url }}">
+{% endif %}
+{% endblock %}
+{% block content %}
+<a href="{% url 'courses:course_list' %}" class="btn btn-link ps-0">&larr; Back to courses</a>
+<div class="card mb-4">
+    <div class="card-body">
+        <h2>{{ course.title }}</h2>
+        <p class="text-muted">{{ course.duration_hours }} hours &middot; RM {{ course.price }}</p>
+        <p>{{ course.description|linebreaks }}</p>
+    </div>
+</div>
+
+<h4 class="mb-3">Upcoming Sessions</h4>
+<div class="table-responsive">
+<table class="table bg-white">
+    <thead>
+        <tr><th>Date & Time</th><th>Trainer</th><th>Location</th><th>Seats left</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for session in sessions %}
+        <tr>
+            <td>{{ session.start_at|date:"d M Y, H:i" }} – {{ session.end_at|date:"H:i" }}</td>
+            <td>{{ session.trainer_name }}</td>
+            <td>{{ session.location }}</td>
+            <td>
+                {% if session.is_full %}
+                    <span class="badge bg-danger">Full</span>
+                {% else %}
+                    <span class="badge bg-success">{{ session.seats_left }} / {{ session.capacity }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'bookings:booking_create' session.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-primary" {% if session.is_full %}disabled{% endif %}>
+                            Book seat
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-primary">Log in to book</a>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No upcoming sessions scheduled yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

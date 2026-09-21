@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-3">Booking payment</h2>
+                <p><strong>Course:</strong> {{ booking.session.course.title }}</p>
+                <p><strong>Session:</strong> {{ booking.session.start_at|date:"d M Y, H:i" }}</p>
+                <p><strong>Amount due:</strong> RM {{ booking.amount_due }}</p>
+
+                {% if booking.status == "confirmed" %}
+                    <div class="alert alert-success">
+                        <strong>Payment verified — your seat is confirmed!</strong>
+                        {% if booking.session.meeting_link %}
+                            <div class="mt-2">
+                                <a href="{{ booking.session.meeting_link }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">Join meeting link</a>
+                            </div>
+                        {% else %}
+                            <div class="mt-2 text-muted small">The meeting link will be shared closer to the session.</div>
+                        {% endif %}
+                    </div>
+
+                {% elif booking.status == "awaiting_verification" %}
+                    <div class="alert alert-warning">
+                        We've received your payment notice on {{ booking.submitted_at|date:"d M Y, H:i" }} and it's
+                        being verified by our team. You'll get an email with the meeting link once it's approved.
+                    </div>
+
+                {% else %}
+                    {% if payment_settings.qr_image %}
+                        <div class="text-center mb-3">
+                            <img src="{{ payment_settings.qr_image.url }}" alt="Bank QR code" class="img-fluid" style="max-width: 260px;">
+                        </div>
+                    {% endif %}
+                    <table class="table table-sm w-auto">
+                        <tr><th>Bank</th><td>{{ payment_settings.bank_name|default:"—" }}</td></tr>
+                        <tr><th>Account holder</th><td>{{ payment_settings.account_holder|default:"—" }}</td></tr>
+                        <tr><th>Account number</th><td>{{ payment_settings.account_number|default:"—" }}</td></tr>
+                    </table>
+                    <p class="text-muted">{{ payment_settings.instructions }}</p>
+                    <div class="alert alert-info">This is a manual bank transfer — no card details are collected on this site.</div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">I've made the payment</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

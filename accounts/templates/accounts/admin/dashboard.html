@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-4">Admin Dashboard</h2>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-center bg-success text-white"><div class="card-body">
+            <div class="fs-2 fw-bold">RM {{ total_sales }}</div>
+            <div>Total sales (confirmed)</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-center"><div class="card-body">
+            <div class="fs-2 fw-bold">{{ course_count }}</div>
+            <div class="text-muted">Courses</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-center"><div class="card-body">
+            <div class="fs-2 fw-bold">{{ session_count }}</div>
+            <div class="text-muted">Sessions</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-center"><div class="card-body">
+            <div class="fs-2 fw-bold">{{ user_count }}</div>
+            <div class="text-muted">Users</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-center"><div class="card-body">
+            <div class="fs-2 fw-bold">{{ booking_count }}</div>
+            <div class="text-muted">Confirmed bookings</div>
+        </div></div>
+    </div>
+</div>
+
+{% if pending_verification_count %}
+<div class="alert alert-warning d-flex flex-wrap gap-2 justify-content-between align-items-center">
+    <span>{{ pending_verification_count }} payment(s) waiting for verification.</span>
+    <a href="{% url 'bookings:admin_payment_verification_list' %}" class="btn btn-sm btn-warning">Review now</a>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Booking status breakdown</h5>
+        {% for row in status_breakdown %}
+        <div class="mb-2">
+            <div class="d-flex justify-content-between small mb-1">
+                <span>{{ row.label }}</span>
+                <span class="text-muted">{{ row.count }} ({{ row.percent }}%)</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+                <div class="progress-bar
+                    {% if row.value == 'confirmed' %}bg-success
+                    {% elif row.value == 'awaiting_verification' %}bg-warning
+                    {% elif row.value == 'pending_payment' %}bg-secondary
+                    {% else %}bg-danger{% endif %}"
+                    style="width: {{ row.percent }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Top courses by revenue</h5>
+                {% if top_courses %}
+                <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Course</th><th class="text-end">Bookings</th><th class="text-end">Revenue</th></tr></thead>
+                    <tbody>
+                    {% for row in top_courses %}
+                        <tr>
+                            <td>{{ row.session__course__title }}</td>
+                            <td class="text-end">{{ row.bookings }}</td>
+                            <td class="text-end">RM {{ row.revenue }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No confirmed bookings yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Sessions in the next 14 days</h5>
+                {% if upcoming_sessions %}
+                <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Course</th><th>Date</th><th class="text-end">Seats</th></tr></thead>
+                    <tbody>
+                    {% for session in upcoming_sessions %}
+                        <tr>
+                            <td>{{ session.course.title }}</td>
+                            <td class="text-nowrap">{{ session.start_at|date:"d M, H:i" }}</td>
+                            <td class="text-end text-nowrap">
+                                {% if session.is_full %}
+                                    <span class="badge bg-danger">Full</span>
+                                {% elif session.seats_left <= 2 %}
+                                    <span class="badge bg-warning text-dark">{{ session.seats_taken }}/{{ session.capacity }}</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">{{ session.seats_taken }}/{{ session.capacity }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No sessions scheduled in the next 14 days.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <h5 class="card-title">Courses</h5>
+            <p class="card-text">Manage the course catalogue.</p>
+            <a href="{% url 'courses:admin_course_list' %}" class="btn btn-primary btn-sm">Manage courses</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <h5 class="card-title">Sessions</h5>
+            <p class="card-text">Schedule sessions and set capacity.</p>
+            <a href="{% url 'courses:admin_session_list' %}" class="btn btn-primary btn-sm">Manage sessions</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <h5 class="card-title">Users</h5>
+            <p class="card-text">Manage user accounts.</p>
+            <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-primary btn-sm">Manage users</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <h5 class="card-title">Payment verification</h5>
+            <p class="card-text">Approve or reject bank-transfer payments.</p>
+            <a href="{% url 'bookings:admin_payment_verification_list' %}" class="btn btn-primary btn-sm">Review payments</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <h5 class="card-title">Bank / QR settings</h5>
+            <p class="card-text">Set the bank account and QR code shown to users.</p>
+            <a href="{% url 'bookings:admin_payment_settings' %}" class="btn btn-primary btn-sm">Edit settings</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <h5 class="card-title">SEO settings</h5>
+            <p class="card-text">Set the default site title, description, and social share image. Per-course SEO fields are set on each course's edit page.</p>
+            <a href="{% url 'courses:admin_seo_settings' %}" class="btn btn-primary btn-sm">Edit SEO settings</a>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}SEO Settings{% endblock %}
+{% block content %}
+<h2 class="mb-4">SEO settings</h2>
+<p class="text-muted">These are the site-wide defaults used on pages without their own SEO fields (e.g. the course list/home page). Each course has its own SEO fields on its edit page that override these.</p>
+{% if object.default_og_image %}
+<img src="{{ object.default_og_image.url }}" alt="Current default social share image" class="mb-3" style="max-width: 240px;">
+{% endif %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock %}

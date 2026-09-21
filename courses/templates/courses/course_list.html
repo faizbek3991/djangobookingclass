@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Courses{% endblock %}
+
+{% block hero %}
+<section class="hero-section py-4 py-lg-5">
+    <div class="container py-3 py-lg-4 position-relative">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="badge badge-pill rounded-pill px-3 py-2 mb-3">Live, trainer-led, online</span>
+                <h1 class="display-5 mb-3">Level up your skills with live online training</h1>
+                <p class="fs-5 mb-4" style="color: rgba(255,255,255,0.85);">
+                    Book a seat in an instructor-led session, pay securely, and get your meeting link the moment
+                    your payment's confirmed. No recordings, no fluff — real trainers, real time.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="#courses" class="btn btn-light btn-lg fw-semibold">Browse courses</a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:signup' %}" class="btn btn-outline-light btn-lg">Create free account</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-stats p-4 p-lg-5">
+                    <div class="row text-center g-3">
+                        <div class="col-4">
+                            <div class="stat-value">{{ stat_course_count }}</div>
+                            <div class="text-muted small">Courses</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-value">{{ stat_upcoming_sessions }}</div>
+                            <div class="text-muted small">Upcoming sessions</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-value">{{ stat_students_trained }}</div>
+                            <div class="text-muted small">Seats booked</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="feature-icon mx-auto mb-3">🎓</div>
+            <h5>Trainer-led sessions</h5>
+            <p class="text-muted">Every session runs live with a real trainer — ask questions, get feedback, no pre-recorded videos.</p>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-icon mx-auto mb-3">🪑</div>
+            <h5>Small class sizes</h5>
+            <p class="text-muted">Every session has a capped number of seats, so you're not lost in a crowd of hundreds.</p>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-icon mx-auto mb-3">🔒</div>
+            <h5>Simple, secure booking</h5>
+            <p class="text-muted">Pay by bank transfer, we verify it, and your meeting link lands straight in your inbox.</p>
+        </div>
+    </div>
+</section>
+
+<section id="courses" class="py-4">
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-baseline mb-4">
+        <h2 class="mb-0">Upcoming Courses</h2>
+        <span class="text-muted small">{{ stat_course_count }} course{{ stat_course_count|pluralize }} available</span>
+    </div>
+    <div class="row g-4">
+        {% for course in courses %}
+        <div class="col-md-4">
+            <div class="card card-course h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">{{ course.title }}</h5>
+                        <span class="badge bg-primary-subtle text-primary-emphasis">{{ course.duration_hours }} hrs</span>
+                    </div>
+                    <p class="card-text text-muted flex-grow-1">{{ course.description|truncatewords:20 }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="fs-5 fw-bold">RM {{ course.price }}</span>
+                        <span class="text-muted small">{{ course.upcoming_sessions.count }} session{{ course.upcoming_sessions.count|pluralize }} open</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pt-0">
+                    <a href="{{ course.get_absolute_url }}" class="btn btn-primary w-100">View &amp; Book</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No courses available right now — check back soon.</p>
+        {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+</section>
+
+<section class="py-5">
+    <div class="cta-section p-4 p-md-5 text-center">
+        <h2 class="mb-3">Ready to book your next session?</h2>
+        <p class="fs-5 mb-4" style="color: rgba(255,255,255,0.85);">Join a live class and start learning with a real trainer today.</p>
+        {% if user.is_authenticated %}
+            <a href="#courses" class="btn btn-light btn-lg fw-semibold">Browse courses</a>
+        {% else %}
+            <a href="{% url 'accounts:signup' %}" class="btn btn-light btn-lg fw-semibold">Create your free account</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

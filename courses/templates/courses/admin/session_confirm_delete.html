@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Delete Session{% endblock %}
+{% block content %}
+{% url 'courses:admin_session_list' as cancel_url %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        {% include "partials/confirm_delete.html" with delete_title="Delete session" cancel_url=cancel_url %}
+    </div>
+</div>
+{% endblock %}

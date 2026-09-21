@@ -1,0 +1,78 @@
+body {
+    background-color: #f7f8fa;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+h1, h2, h3, h4, h5, .navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.card-course {
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.card-course:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.75rem 1.5rem rgba(20, 20, 43, 0.12) !important;
+}
+
+/* ---- Home page hero ---- */
+
+.hero-section {
+    background: linear-gradient(135deg, #1f2b6c 0%, #3a3fb5 55%, #4d5be0 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.10) 0, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(255, 255, 255, 0.10) 0, transparent 40%);
+    pointer-events: none;
+}
+
+.hero-section h1.display-5 {
+    font-size: clamp(1.85rem, 5vw + 1rem, 3rem);
+}
+
+.hero-section .badge-pill {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-weight: 500;
+}
+
+.hero-stats {
+    background-color: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 2.5rem rgba(20, 20, 43, 0.15);
+}
+
+.hero-stats .stat-value {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #2b1fb5;
+}
+
+.feature-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eef0ff, #dfe3ff);
+    color: #2b1fb5;
+    font-size: 1.5rem;
+}
+
+.cta-section {
+    background: linear-gradient(135deg, #14163a 0%, #23277a 100%);
+    color: #fff;
+    border-radius: 1.25rem;
+}

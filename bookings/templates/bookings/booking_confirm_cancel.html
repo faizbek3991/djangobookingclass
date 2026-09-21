@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Cancel Booking{% endblock %}
+{% block content %}
+{% url 'bookings:booking_list' as cancel_url %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        {% include "partials/confirm_delete.html" with delete_title="Cancel booking" cancel_url=cancel_url action_word="cancel" %}
+    </div>
+</div>
+{% endblock %}

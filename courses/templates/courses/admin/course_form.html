@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Edit Course{% else %}Add Course{% endif %}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{% if object %}Edit course: {{ object.title }}{% else %}Add course{% endif %}</h2>
+{% if object.og_image %}
+<img src="{{ object.og_image.url }}" alt="Current social share image" class="mb-3" style="max-width: 240px;">
+{% endif %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'courses:admin_course_list' %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock %}

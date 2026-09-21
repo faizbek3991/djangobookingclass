@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Payment Verifications{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Payments awaiting verification</h2>
+    <a href="{% url 'bookings:admin_payment_settings' %}" class="btn btn-outline-secondary btn-sm">Bank / QR settings</a>
+</div>
+<p class="text-muted">Check that the amount below has arrived in the bank account shown on the payment settings page, then approve or reject.</p>
+<div class="table-responsive">
+<table class="table table-striped bg-white">
+    <thead>
+        <tr><th>User</th><th>Course</th><th>Session</th><th>Amount</th><th>Submitted</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.user.get_full_name|default:booking.user.username }}<br><span class="text-muted small">{{ booking.user.email }}</span></td>
+            <td>{{ booking.session.course.title }}</td>
+            <td>{{ booking.session.start_at|date:"d M Y, H:i" }}</td>
+            <td>RM {{ booking.amount_due }}</td>
+            <td>{{ booking.submitted_at|date:"d M Y, H:i" }}</td>
+            <td class="text-end text-nowrap">
+                <form method="post" action="{% url 'bookings:admin_booking_approve' booking.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="post" action="{% url 'bookings:admin_booking_reject' booking.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="text-center text-muted">No payments waiting for verification.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

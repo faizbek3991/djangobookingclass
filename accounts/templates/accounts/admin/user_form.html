@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Edit User{% else %}Add User{% endif %}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{% if object %}Edit user: {{ object.username }}{% else %}Add user{% endif %}</h2>
+<form method="post">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'accounts:admin_user_list' %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock %}
