@@ -103,6 +103,20 @@ Image fields (course social-share image, SEO default image, bank QR code) are se
 
 Not yet added: pagination on list endpoints (all return the full list — fine at this scale, revisit with `@paginate` if course/user counts grow large) and a non-cookie (token) auth mode for a fully separate frontend origin or a mobile app.
 
+### Async / running under ASGI
+
+Every endpoint in `accounts/api.py`, `courses/api.py`, and `bookings/api.py` is `async def`, using Django's async ORM (`aget`, `acreate`, `asave`, `aget_object_or_404`, `async for` iteration, etc.) instead of blocking the request while waiting on the database. The Django template-rendered pages (course list, admin dashboard, etc.) are unchanged — they stay on Django's standard synchronous class-based views, which is the normal, recommended split (Django doesn't have async generic CBVs yet).
+
+This only pays off if the app is actually served over ASGI:
+
+```bash
+python -m uvicorn training_booking.asgi:application --reload
+```
+
+`manage.py runserver` still works exactly as before (Django auto-bridges async views under WSGI) — you just don't get real concurrency out of it. Use `runserver` for normal day-to-day development; switch to `uvicorn` when you actually want to test/benchmark concurrent request handling.
+
+**A subtlety worth knowing if you touch this code:** a few of `Session`'s and `Course`'s own model properties (`seats_taken`, `seats_left`, `is_full`, `upcoming_sessions`) run a database query when accessed, which is fine in the (sync) Django template views but would raise `SynchronousOnlyOperation` if triggered during async response serialization. The API schemas (`courses/schemas.py`) avoid this by reading from precomputed attributes (`_booked_count`, `_upcoming_count`, `_prefetched_sessions`) that each async view sets explicitly — via `.annotate()` on list queries, or an explicit `.acount()`/async fetch on single-object ones — instead of letting the schema call those properties directly. If you add a new API field derived from a related object or aggregate, follow the same pattern rather than exposing a property that queries the DB.
+
 ## SEO
 - **Per-course**: each course's edit page (**Courses → edit**) has optional "meta title", "meta description" and a social-share image. Left blank, they fall back to the course's title/description automatically.
 - **Site-wide defaults**: admin dashboard → **SEO settings** — site name, default title/description, default social-share image, and a Google Search Console verification code. Used on pages without their own SEO fields (course list/home).

@@ -130,3 +130,8 @@ class SiteSEOSettings(models.Model):
     def get_solo(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+    @classmethod
+    async def aget_solo(cls):
+        obj, _ = await cls.objects.aget_or_create(pk=1)
+        return obj

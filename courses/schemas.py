@@ -6,7 +6,14 @@ from ninja import Schema
 
 
 class SessionOut(Schema):
-    """Public-facing session info — no meeting_link (only revealed to the booking owner once confirmed)."""
+    """Public-facing session info — no meeting_link (only revealed to the booking owner once confirmed).
+
+    seats_taken/seats_left/is_full read from a `_booked_count` attribute that the
+    async API views must set (via `.annotate()` or an explicit `.acount()`) before
+    returning — NOT from the model's own `seats_taken`/`is_full` properties, which
+    run a synchronous DB query and would raise SynchronousOnlyOperation if touched
+    during response serialization in an async view.
+    """
 
     id: int
     trainer_name: str
@@ -19,8 +26,24 @@ class SessionOut(Schema):
     is_full: bool
     is_past: bool
 
+    @staticmethod
+    def resolve_seats_taken(obj):
+        return getattr(obj, "_booked_count", 0)
+
+    @staticmethod
+    def resolve_seats_left(obj):
+        return max(obj.capacity - getattr(obj, "_booked_count", 0), 0)
+
+    @staticmethod
+    def resolve_is_full(obj):
+        return getattr(obj, "_booked_count", 0) >= obj.capacity
+
 
 class CourseOut(Schema):
+    """upcoming_sessions_count reads from `_upcoming_count`, which the async views
+    set via `.annotate()` (list endpoints) or an explicit `.acount()` (single-object
+    endpoints) — see the SessionOut docstring for why."""
+
     id: int
     title: str
     slug: str
@@ -32,7 +55,7 @@ class CourseOut(Schema):
 
     @staticmethod
     def resolve_upcoming_sessions_count(obj):
-        return obj.upcoming_sessions.count()
+        return getattr(obj, "_upcoming_count", 0)
 
 
 class CourseDetailOut(CourseOut):
@@ -40,7 +63,7 @@ class CourseDetailOut(CourseOut):
 
     @staticmethod
     def resolve_sessions(obj):
-        return list(obj.upcoming_sessions)
+        return getattr(obj, "_prefetched_sessions", [])
 
 
 class CourseAdminOut(CourseOut):
@@ -72,6 +95,8 @@ class SessionAdminOut(SessionOut):
 
     @staticmethod
     def resolve_course_title(obj):
+        # Safe only because the views fetch sessions with .select_related("course") —
+        # otherwise this FK access would trigger a fresh (sync) query here.
         return obj.course.title
 
 
