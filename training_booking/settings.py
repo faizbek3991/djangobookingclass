@@ -14,21 +14,42 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Loads BASE_DIR/.env for local development (gitignored — see .env.example).
+# Real deployments (Render, etc.) set these as actual environment variables,
+# which load_dotenv() never overrides.
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "django-insecure-^17k)%#4o*7vyizvw$qn=!d#3@0!m-y1og)_f*kv)oem&locb-"
-)
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# The dev fallback below is already public (committed to the repo), so it's
+# only ever used for local DEBUG runs — production must set a real SECRET_KEY
+# env var or fail to start rather than silently running on a known key.
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-^17k)%#4o*7vyizvw$qn=!d#3@0!m-y1og)_f*kv)oem&locb-"
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY environment variable must be set when DEBUG=False"
+        )
+
+# Render assigns each service its own subdomain of the shared onrender.com
+# domain — trust only that specific hostname, not the whole shared domain
+# (a leading-dot/wildcard entry would let any other Render customer's app
+# satisfy the Host header check).
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -37,8 +58,9 @@ ALLOWED_HOSTS = [
     ".ngrok-free.dev",
     ".ngrok.app",
     ".ngrok.io",
-    ".onrender.com",
 ]
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Needed so Django trusts state-changing (POST/PUT/DELETE) requests that arrive
 # via an ngrok tunnel — ngrok terminates HTTPS itself, so without this Django's
@@ -48,8 +70,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.dev",
     "https://*.ngrok.app",
     "https://*.ngrok.io",
-    "https://*.onrender.com",
 ]
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 # ngrok forwards HTTPS to this app over plain HTTP; without this Django doesn't
 # know the original request was HTTPS (affects request.is_secure(), redirects).
