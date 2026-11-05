@@ -9,9 +9,10 @@ from django.views.generic import DeleteView, DetailView, ListView, UpdateView
 from accounts.mixins import StaffRequiredMixin
 from courses.models import Session
 
+from .certificates import build_certificate_pdf, certificate_eligible, certificate_id
 from .emails import send_booking_approved_email
-from .forms import BookingRescheduleForm, PaymentSettingsForm
-from .models import ACTIVE_BOOKING_STATUSES, Booking, PaymentSettings
+from .forms import BookingCertificateForm, BookingRescheduleForm, CertificateSettingsForm, PaymentSettingsForm
+from .models import ACTIVE_BOOKING_STATUSES, Booking, CertificateSettings, PaymentSettings
 
 
 class MyBookingListView(LoginRequiredMixin, ListView):
@@ -21,6 +22,9 @@ class MyBookingListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Booking.objects.filter(user=self.request.user).select_related("session", "session__course")
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(now=timezone.now(), **kwargs)
 
 
 class CreateBookingView(LoginRequiredMixin, View):
@@ -156,4 +160,62 @@ class PaymentSettingsUpdateView(StaffRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         messages.success(self.request, "Payment settings updated.")
+        return super().form_valid(form)
+
+
+# ---- Certificates ----
+
+class CertificateDownloadView(LoginRequiredMixin, View):
+    """Downloads the PDF certificate for a confirmed booking whose session has ended.
+    Owners can download their own; staff can download any."""
+
+    def get(self, request, pk):
+        from django.http import FileResponse, Http404
+
+        qs = Booking.objects.select_related("user", "session", "session__course")
+        if not request.user.is_staff:
+            qs = qs.filter(user=request.user)
+        booking = get_object_or_404(qs, pk=pk)
+        if not certificate_eligible(booking):
+            raise Http404("Certificate not available yet.")
+        filename = f"sijil-{certificate_id(booking)}.pdf"
+        return FileResponse(build_certificate_pdf(booking), as_attachment=True, filename=filename,
+                            content_type="application/pdf")
+
+
+class AdminCertificateListView(StaffRequiredMixin, ListView):
+    template_name = "bookings/admin/certificate_list.html"
+    context_object_name = "bookings"
+    paginate_by = 30
+
+    def get_queryset(self):
+        return (Booking.objects.filter(status=Booking.STATUS_CONFIRMED, session__end_at__lte=timezone.now())
+                .select_related("user", "session", "session__course").order_by("-session__end_at"))
+
+
+class CertificateSettingsUpdateView(StaffRequiredMixin, UpdateView):
+    model = CertificateSettings
+    form_class = CertificateSettingsForm
+    template_name = "bookings/admin/certificate_settings_form.html"
+    success_url = reverse_lazy("bookings:admin_certificate_settings")
+
+    def get_object(self, queryset=None):
+        return CertificateSettings.get_solo()
+
+    def form_valid(self, form):
+        messages.success(self.request, "Certificate template updated.")
+        return super().form_valid(form)
+
+
+class BookingCertificateUpdateView(StaffRequiredMixin, UpdateView):
+    model = Booking
+    form_class = BookingCertificateForm
+    template_name = "bookings/admin/certificate_booking_form.html"
+    success_url = reverse_lazy("bookings:admin_certificate_list")
+
+    def get_queryset(self):
+        return Booking.objects.select_related("user", "session", "session__course")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Certificate details updated.")
         return super().form_valid(form)

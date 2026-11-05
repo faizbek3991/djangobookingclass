@@ -2,7 +2,7 @@ from django import forms
 
 from courses.models import Session
 
-from .models import Booking, PaymentSettings
+from .models import Booking, CertificateSettings, PaymentSettings
 
 
 class PaymentSettingsForm(forms.ModelForm):
@@ -39,3 +39,29 @@ class BookingRescheduleForm(forms.ModelForm):
         if session != self.instance.session and session.is_full:
             raise forms.ValidationError("That session is already full.")
         return session
+
+
+class CertificateSettingsForm(forms.ModelForm):
+    class Meta:
+        model = CertificateSettings
+        fields = ["title", "intro_text", "completion_text", "signatory_name", "signatory_title",
+                  "footer_note", "accent_color", "border_color"]
+        widgets = {f: forms.TextInput(attrs={"class": "form-control"}) for f in fields}
+        widgets["accent_color"] = forms.TextInput(attrs={"class": "form-control", "type": "color"})
+        widgets["border_color"] = forms.TextInput(attrs={"class": "form-control", "type": "color"})
+
+
+class BookingCertificateForm(forms.ModelForm):
+    class Meta:
+        model = Booking
+        fields = ["cert_name", "cert_course_title", "cert_date"]
+        widgets = {
+            "cert_name": forms.TextInput(attrs={"class": "form-control"}),
+            "cert_course_title": forms.TextInput(attrs={"class": "form-control"}),
+            "cert_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        }
+        help_texts = {
+            "cert_name": "Leave blank to use the user's full name.",
+            "cert_course_title": "Leave blank to use the course title.",
+            "cert_date": "Leave blank to use the session start date.",
+        }

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Edit certificate{% endblock %}
+{% block content %}
+<h2 class="mb-4">Edit certificate</h2>
+<p class="text-muted">
+    {{ object.user.get_full_name|default:object.user.username }} &middot; {{ object.session.course.title }}
+    &middot; {{ object.session.start_at|date:"d M Y" }}
+</p>
+<form method="post">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'bookings:admin_certificate_list' %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock %}

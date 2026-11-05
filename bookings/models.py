@@ -26,6 +26,11 @@ class Booking(models.Model):
     submitted_at = models.DateTimeField(null=True, blank=True, help_text="When the user marked payment as made")
     paid_at = models.DateTimeField(null=True, blank=True, help_text="When admin approved the payment")
 
+    # Per-certificate overrides. Blank means "use the session/user data".
+    cert_name = models.CharField("Certificate name", max_length=150, blank=True, default="")
+    cert_course_title = models.CharField("Certificate course title", max_length=200, blank=True, default="")
+    cert_date = models.DateField("Certificate session date", null=True, blank=True)
+
     class Meta:
         ordering = ["-booked_at"]
         constraints = [
@@ -71,4 +76,30 @@ class PaymentSettings(models.Model):
     @classmethod
     async def aget_solo(cls):
         obj, _ = await cls.objects.aget_or_create(pk=1)
+        return obj
+
+
+class CertificateSettings(models.Model):
+    """Singleton: shared template for every certificate PDF."""
+
+    title = models.CharField(max_length=100, default="CERTIFICATE OF COMPLETION")
+    intro_text = models.CharField(max_length=200, default="This certificate is proudly presented to")
+    completion_text = models.CharField(max_length=200, default="for successfully completing the course")
+    signatory_name = models.CharField(max_length=150, default="", blank=True,
+                                      help_text="Leave blank to use the session trainer's name.")
+    signatory_title = models.CharField(max_length=150, default="", blank=True)
+    footer_note = models.CharField(max_length=200, default="", blank=True)
+    accent_color = models.CharField(max_length=7, default="#1f3a5f", help_text="Hex colour, e.g. #1f3a5f")
+    border_color = models.CharField(max_length=7, default="#c9a227", help_text="Hex colour, e.g. #c9a227")
+
+    class Meta:
+        verbose_name = "Certificate settings"
+        verbose_name_plural = "Certificate settings"
+
+    def __str__(self):
+        return "Certificate settings"
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
         return obj
