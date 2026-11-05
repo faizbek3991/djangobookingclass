@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Sijil{% endblock %}
+{% block content %}
+<h2 class="mb-4">Sijil Kursus</h2>
+<p class="text-muted">Participants whose session has ended and booking is confirmed. Edit a name or date here, or change the shared template.</p>
+<a href="{% url 'bookings:admin_certificate_settings' %}" class="btn btn-primary btn-sm mb-3">Edit certificate template</a>
+<div class="table-responsive">
+<table class="table bg-white">
+    <thead><tr><th>Participant</th><th>Course</th><th>Session date</th><th>Certificate No</th><th></th></tr></thead>
+    <tbody>
+    {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.cert_name|default:booking.user.get_full_name|default:booking.user.username }}{% if booking.cert_name %} <span class="badge bg-info text-dark">edited</span>{% endif %}</td>
+            <td>{{ booking.cert_course_title|default:booking.session.course.title }}</td>
+            <td>{{ booking.cert_date|default:booking.session.start_at|date:"d M Y" }}</td>
+            <td>TB-{{ booking.session.start_at|date:"Ymd" }}-{{ booking.pk|stringformat:"05d" }}</td>
+            <td class="text-end">
+                <a href="{% url 'bookings:admin_certificate_edit' booking.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                <a href="{% url 'bookings:certificate_download' booking.pk %}" class="btn btn-sm btn-warning">PDF</a>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No certificates yet. They appear once a session has ended.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

@@ -34,6 +34,9 @@
                         <a href="{{ booking.session.meeting_link }}" target="_blank" rel="noopener" class="btn btn-sm btn-success">Join meeting</a>
                     {% endif %}
                     <a href="{% url 'bookings:booking_reschedule' booking.pk %}" class="btn btn-sm btn-outline-secondary">Reschedule</a>
+                    {% if booking.session.end_at <= now %}
+                        <a href="{% url 'bookings:certificate_download' booking.pk %}" class="btn btn-sm btn-warning">Muat turun sijil (PDF)</a>
+                    {% endif %}
                 {% endif %}
                 {% if booking.status != "cancelled" %}
                     <a href="{% url 'bookings:booking_cancel' booking.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>

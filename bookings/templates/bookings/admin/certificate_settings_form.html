@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Certificate template{% endblock %}
+{% block content %}
+<h2 class="mb-4">Certificate template</h2>
+<p class="text-muted">These settings apply to every certificate. Leave signatory name blank to use each session's trainer.</p>
+<form method="post">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save template</button>
+    <a href="{% url 'bookings:admin_certificate_list' %}" class="btn btn-outline-secondary">Back to certificates</a>
+</form>
+{% endblock %}
