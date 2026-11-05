@@ -1,0 +1,8 @@
+# Overrides the "make all" build command set in the Netlify UI (the repo has no Makefile).
+# Netlify cannot run a long-running Django server, so the build only collects
+# the project's static assets and publishes them. Dependencies are installed
+# in the command because not every deploy path runs the install stage. DEBUG=True is scoped to this
+# one command so settings load without a production SECRET_KEY; no server runs.
+[build]
+  command = "pip install -r requirements.txt && DEBUG=True python manage.py collectstatic --noinput"
+  publish = "staticfiles"
